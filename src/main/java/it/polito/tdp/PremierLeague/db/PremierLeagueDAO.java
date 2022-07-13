@@ -6,7 +6,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
 import it.polito.tdp.PremierLeague.model.Action;
+import it.polito.tdp.PremierLeague.model.Coppia;
 import it.polito.tdp.PremierLeague.model.Match;
 import it.polito.tdp.PremierLeague.model.Player;
 import it.polito.tdp.PremierLeague.model.Team;
@@ -36,25 +39,26 @@ public class PremierLeagueDAO {
 		}
 	}
 	
-	public List<Team> listAllTeams(){
+	public void listAllTeams(Map<Integer, Team> idMap){
 		String sql = "SELECT * FROM Teams";
-		List<Team> result = new ArrayList<Team>();
+		//List<Team> result = new ArrayList<Team>();
 		Connection conn = DBConnect.getConnection();
 
 		try {
 			PreparedStatement st = conn.prepareStatement(sql);
 			ResultSet res = st.executeQuery();
 			while (res.next()) {
-
+				if(!idMap.containsKey(res.getInt("TeamID"))) {
 				Team team = new Team(res.getInt("TeamID"), res.getString("Name"));
-				result.add(team);
+				idMap.put(res.getInt("TeamID"),team);
+				}
 			}
 			conn.close();
-			return result;
+		//	return result;
 			
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return null;
+			return ;
 		}
 	}
 	
@@ -112,4 +116,142 @@ public class PremierLeagueDAO {
 		}
 	}
 	
+	
+	public List<Team> getvertici(Map<Integer,Team> idMap){
+		String sql = "SELECT t.TeamID AS t "
+				+ "FROM teams t ";
+		List<Team> result = new ArrayList<>();
+		Connection conn = DBConnect.getConnection();
+
+		try {
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet res = st.executeQuery();
+			while (res.next()) {
+
+				
+				result.add(idMap.get(res.getInt("t")));
+
+			}
+			conn.close();
+			return result;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}	
+	}
+	
+	
+	public void getArchi(Map<Integer, Team> idMap){
+	
+		String sql ="SELECT DISTINCT  m.TeamHomeID AS t1, m.TeamAwayID AS t2, m.ResultOfTeamHome AS puntiHome "
+				+ "FROM matches m "
+				+ "GROUP BY t1,t2 ";
+		//List<Coppia> result = new ArrayList<>();
+		Connection conn = DBConnect.getConnection();
+
+		try {
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet res = st.executeQuery();
+			while (res.next()) {
+
+				if(res.getInt("puntiHome")>0) {
+					idMap.get(res.getInt("t1")).setPoints(3);
+				}
+				else if(res.getInt("puntiHome")==0) {
+					idMap.get(res.getInt("t1")).setPoints(1);
+					idMap.get(res.getInt("t2")).setPoints(1);
+				}
+				else {
+					idMap.get(res.getInt("t2")).setPoints(3);
+				}
+
+			}
+			conn.close();
+			//return result;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return ;
+		}		
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+/*	
+	public List<Team> getvertici(Map<Integer, Team> idMap){
+		String sql ="SELECT TeamID AS t "
+				+ "FROM teams  ";
+		List<Team> result = new ArrayList<>();
+		Connection conn = DBConnect.getConnection();
+
+		try {
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet res = st.executeQuery();
+			while (res.next()) {
+
+				result.add(idMap.get(res.getInt("t")));
+
+			}
+			conn.close();
+			return result;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+		
+	}
+	
+	public List<Coppia> getArchi(Map<Integer, Team> idMap){
+		String sql ="SELECT a1.TeamID AS s1, a2.TeamID AS s2, m.ResultOfTeamHome AS peso "
+				+ "FROM actions a1, actions a2, matches m "
+				+ "WHERE a1.TeamID>a2.TeamID "
+				+ "		AND a2.MatchID=a1.MatchID "
+				+ "		AND m.MatchID=a2.MatchID "
+				+ "		AND m.TeamHomeID=a1.TeamID "
+				+ "		AND m.TeamAwayID=a2.TeamID "
+				+ "GROUP BY s1,s2";
+		List<Coppia> result = new ArrayList<>();
+		Connection conn = DBConnect.getConnection();
+
+		try {
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet res = st.executeQuery();
+			while (res.next()) {
+
+				Team s1 = idMap.get(res.getInt("s1"));
+				Team s2 = idMap.get(res.getInt("s2"));
+				int punti = res.getInt("peso");
+				
+				result.add(new Coppia(s1,s2,punti));
+			}
+			conn.close();
+			return result;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	*/
 }
